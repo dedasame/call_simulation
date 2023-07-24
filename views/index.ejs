@@ -6,15 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Call Simulation</title>
   <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    table, th, td {
-      border: 1px solid black;
-      padding: 8px;
-    }
+    /* ... */
   </style>
 </head>
 <body>
@@ -48,5 +40,27 @@
       <% }); %>
     </tbody>
   </table>
+
+  <h2>Bekleyen Çağrılar</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Caller ID</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% waitingCalls.forEach(waitingCall => { %>
+        <tr>
+          <td><%= waitingCall.callerId %></td>
+          <td><%= waitingCall.timestamp %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
 </body>
 </html>
+
+
+
+
