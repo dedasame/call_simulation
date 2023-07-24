@@ -1,0 +1,52 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call Simulation</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Call Simulation</h1>
+  <form action="/makeCall" method="post">
+    <label for="recipient">Choose a recipient:</label>
+    <select name="recipientId" id="recipient">
+      <% callRecipients.forEach(recipient => { %>
+        <option value="<%= recipient.id %>"><%= recipient.name %></option>
+      <% }); %>
+    </select>
+    <button type="submit">Make Call</button>
+  </form>
+
+  <h2>Call Log</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Recipient</th>
+        <th>Duration (seconds)</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% callLog.forEach(call => { %>
+        <tr>
+          <td><%= call.recipient %></td>
+          <td><%= call.duration %></td>
+          <td><%= call.timestamp %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</body>
+</html>
