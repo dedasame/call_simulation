@@ -4,30 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Call Simulation</title>
+  <title>Çağrı Simülasyonu</title>
   <style>
     /* ... */
   </style>
 </head>
 <body>
-  <h1>Call Simulation</h1>
-  <form action="/makeCall" method="post">
-    <label for="recipient">Choose a recipient:</label>
-    <select name="recipientId" id="recipient">
-      <% callRecipients.forEach(recipient => { %>
-        <option value="<%= recipient.id %>"><%= recipient.name %></option>
-      <% }); %>
-    </select>
-    <button type="submit">Make Call</button>
+  <h1>Çağrı Simülasyonu</h1>
+  <form action="/cagriYap" method="post">
+    <button type="submit">Çağrı Yap</button>
   </form>
 
-  <h2>Call Log</h2>
+  <h2>Çağrı Geçmişi</h2>
   <table>
     <thead>
       <tr>
-        <th>Recipient</th>
-        <th>Duration (seconds)</th>
-        <th>Time</th>
+        <th>Çağrı Alıcı</th>
+        <th>Süresi (saniye)</th>
+        <th>Saat</th>
+        <th>   Çağrı ID</th>
       </tr>
     </thead>
     <tbody>
@@ -36,6 +31,7 @@
           <td><%= call.recipient %></td>
           <td><%= call.duration %></td>
           <td><%= call.timestamp %></td>
+          <td><%= call.callerId %></td>
         </tr>
       <% }); %>
     </tbody>

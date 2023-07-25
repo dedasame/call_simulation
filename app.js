@@ -10,6 +10,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+
 //Çağrı Alıcılar
 const callRecipients = [
   { id: 1, name: 'Çağrı Alıcı 1', available: true },
@@ -28,30 +29,28 @@ const simulateCallDuration = () => {
   return Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000; // Between 5 and 30 seconds
 };
 
-// Function to generate JWT for caller
-function generateCallerJWT(callerId) {
-  const secretKey = 'your_secret_key';
-  return jwt.sign({ callerId }, secretKey, { expiresIn: '1h' });
-}
-
-// Function to extract caller ID from JWT
-function getCallerIdFromJWT(token) {
-  const secretKey = 'your_secret_key';
-  try {
-    const decoded = jwt.verify(token, secretKey);
-    return decoded.callerId;
-  } catch (error) {
-    return null;
-  }
-}
-
-// Route to render the HTML page for initiating calls
+//*Tarayıcıda görülecek HTML sayfasını hazırlamak için 
 app.get('/', (req, res) => {
   res.render('index', { callRecipients, callLog, waitingCalls });
 });
 
-//Çağrıyı arama ile eşleştirir
-function connectCall() {
+
+//*rastgele 11 haneli id oluşturur
+function generateRandomId() {
+  const length = 11;
+  let id = '';
+  const characters = '0123456789';
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    id += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return id;
+}
+
+//*Çağrıyı arama ile eşleştirir
+function connectCall(callerId) {
   const availableRecipient = callRecipients.find((recipient) => recipient.available);
 
   if (availableRecipient) {
@@ -66,35 +65,34 @@ function connectCall() {
       recipient: availableRecipient.name,
       duration: callDuration / 1000,
       timestamp: new Date().toLocaleString(),
+      callerId: callerId, // Çağrıyı yapanın ID'sini burada ekliyoruz
     });
 
     // Reset the recipient status after the call duration
     setTimeout(() => {
       availableRecipient.available = true;
 
-      // Check if there are waiting calls, if so, connect the next call
+      //beklemede çağrı var mı diye kontrol ediyor varsa bağlıyor
       if (waitingCalls.length > 0) {
-        const nextCall = waitingCalls.shift();
+        const nextCall = waitingCalls.shift(); //ilk elemanı alır ve diziden siler
         connectCall();
       }
     }, callDuration);
   }
 }
 
-// Route to handle the call simulation
-app.post('/makeCall', (req, res) => {
+
+//* http://localhost:3000/cagri 'da olacak şeyler
+app.post('/cagriYap', (req, res) => {
   const callerId = generateRandomId();
 
   //Çağrı alıcılar boş mu kontrol ediyor
   const availableRecipient = callRecipients.find((recipient) => recipient.available);
 
+  //Boşta çağrı alıcı var ise
   if (availableRecipient) {
 
-    //Boşta çağrı alıcı varsa çağrıyı al
-    //Çağrı alıcının durumunu meşgule al
     availableRecipient.available = false;
-
-    // Simulate the call duration
     const callDuration = simulateCallDuration();
 
     //Çağrıyı çağrı geçmişine ekle
@@ -112,40 +110,27 @@ app.post('/makeCall', (req, res) => {
       //Bekleyen çağrıyı kontrol et varsa bağla
       if (waitingCalls.length > 0) {
         const nextCall = waitingCalls.shift();
-        connectCall(nextCall);
+        connectCall(nextCall.callerId);
       }
     }, callDuration);
 
-    res.send(`Call initiated with Recipient ${availableRecipient.name}. Call duration: ${callDuration / 1000} seconds.`);
-  } else {
-    //Boşta çağrı alıcı yoksa bekleme listesine
+    res.send(`Çağrı alındı Alıcı: ${availableRecipient.name}. Çağrının süresi: ${callDuration / 1000} saniye.`);
+  } 
+  //Boşta çağrı alıcı yok ise
+  else {
+    //bekleme listesine eklenir
       waitingCalls.push({
-      recipientId: req.body.recipientId,
-      recipient: callRecipients.find((recipient) => recipient.id == req.body.recipientId).name,
       timestamp: new Date().toLocaleString(),
       callerId: callerId
     });
 
-    res.send('All recipients are busy. Your call is in the waiting list.');
+    res.send('Bütün çağrı alıcıları şu anda meşgul. Bekleme listesine alındınız.');
   }
 });
 
-//Server Başlatma
+//*Server Başlatma
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server http://localhost:${port} adresinde çalışmakta`);
 });
-
-function generateRandomId() {
-  const length = 11;
-  let id = '';
-  const characters = '0123456789';
-  const charactersLength = characters.length;
-
-  for (let i = 0; i < length; i++) {
-    id += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-
-  return id;
-}
 
 
