@@ -54,28 +54,28 @@ function connectCall(callerId) {
   const availableRecipient = callRecipients.find((recipient) => recipient.available);
 
   if (availableRecipient) {
-    // Mark the recipient as busy
+    //Alıcınun durumunu meşgule çeker
     availableRecipient.available = false;
 
-    // Simulate the call duration
+    //Çağrı süresini belirler
     const callDuration = simulateCallDuration();
 
-    // Add the call to the call log
+    //Çağrı geçmişine ekler
     callLog.push({
       recipient: availableRecipient.name,
       duration: callDuration / 1000,
       timestamp: new Date().toLocaleString(),
-      callerId: callerId, // Çağrıyı yapanın ID'sini burada ekliyoruz
+      callerId: callerId,
     });
 
-    // Reset the recipient status after the call duration
+    //Alıcının durumunu değişir süre içinde
     setTimeout(() => {
       availableRecipient.available = true;
 
-      //beklemede çağrı var mı diye kontrol ediyor varsa bağlıyor
+      //Beklemede çağrı var mı kontrol eder
       if (waitingCalls.length > 0) {
-        const nextCall = waitingCalls.shift(); //ilk elemanı alır ve diziden siler
-        connectCall();
+        const nextCall = waitingCalls.shift()
+        connectCall(nextCall.callerId)
       }
     }, callDuration);
   }
@@ -118,10 +118,10 @@ app.post('/cagriYap', (req, res) => {
   } 
   //Boşta çağrı alıcı yok ise
   else {
-    //bekleme listesine eklenir
-      waitingCalls.push({
+    //Bekleme listesine ekler
+    waitingCalls.push({
       timestamp: new Date().toLocaleString(),
-      callerId: callerId
+      callerId: callerId,
     });
 
     res.send('Bütün çağrı alıcıları şu anda meşgul. Bekleme listesine alındınız.');
