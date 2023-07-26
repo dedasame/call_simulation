@@ -139,3 +139,5 @@ app.post('/cagriYap', (req, res) => {
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışmakta`);
 });
+
+
