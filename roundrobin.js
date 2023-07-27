@@ -87,3 +87,55 @@ function generateRandomId() {
   }
   return id;
 }
+
+function connectCall(callerId) {
+  // Tüm çağrı alıcıları meşgulse, çağrıyı bekleme listesine ekle ve çık
+  if (callRecipients.every((recipient) => !recipient.available)) {
+    waitingCalls.push({
+      timestamp: new Date().toLocaleString(),
+      callerId: callerId,
+    });
+    return;
+  }
+
+  // Find the next available recipient using round-robin
+  let recipient;
+  for (let i = 0; i < callRecipients.length; i++) {
+    const index = (lastRecipientIndex + i) % callRecipients.length;
+    if (callRecipients[index].available) {
+      recipient = callRecipients[index];
+      lastRecipientIndex = index;
+      break;
+    }
+  }
+
+  // If no available recipients were found, add to waitingCalls
+  if (!recipient) {
+    waitingCalls.push({
+      timestamp: new Date().toLocaleString(),
+      callerId: callerId,
+    });
+    return;
+  }
+
+  // Continue with the rest of the connectCall function as before...
+  // (Same code as in the provided function)
+
+  const callDuration = simulateCallDuration();
+
+  callLog.push({
+    recipient: recipient.name,
+    duration: callDuration / 1000,
+    timestamp: new Date().toLocaleString(),
+    callerId: callerId,
+  });
+
+  setTimeout(() => {
+    recipient.available = true;
+    // Beklemede çağrı var mı kontrol eder
+    if (waitingCalls.length > 0) {
+      const nextCall = waitingCalls.shift();
+      connectCall(nextCall.callerId);
+    }
+  }, callDuration);
+}
