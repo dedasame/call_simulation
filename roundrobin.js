@@ -11,9 +11,9 @@ app.use(express.static('public'));
 
 // Çağrı Alıcılar
 let callRecipients = [
-  { name: 'Çağrı Alıcı 1', available: true},
-  { name: 'Çağrı Alıcı 2', available: true},
-  { name: 'Çağrı Alıcı 3', available: true}
+  { name: 'Çağrı Alıcı 1', available: true },
+  { name: 'Çağrı Alıcı 2', available: true },
+  { name: 'Çağrı Alıcı 3', available: true }
 ];
 
 // Çağrı geçmişi
@@ -24,16 +24,16 @@ const waitingCalls = [];
 
 // Çağrı saniyesini atama
 const simulateCallDuration = () => {
-  return Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000; // Between 5 and 30 seconds
+  return Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000; // 5 ile 30 saniye arasında
 };
 
-//*Tarayıcıda görülecek HTML sayfasını hazırlamak için
+//* Tarayıcıda görülecek HTML sayfasını hazırlamak için
 app.get('/', (req, res) => {
   res.render('index', { callRecipients, callLog, waitingCalls });
 });
 
-// Rota indeksi
 let currentRecipientIndex = 0;
+let lastRecipientIndex = 0;
 
 // http://localhost:3000/cagri 'da olacak şeyler
 app.post('/cagriYap', (req, res) => {
@@ -45,11 +45,16 @@ app.post('/cagriYap', (req, res) => {
 
   if (selectedRecipient.available) {
     selectedRecipient.available = false;
-
     const callDuration = simulateCallDuration();
 
     setTimeout(() => {
       selectedRecipient.available = true;
+      // Bekleyen çağrıyı kontrol et varsa bağla
+      if (waitingCalls.length > 0) {
+        const nextCall = waitingCalls.shift();
+        connectCall(nextCall.callerId);
+      }
+
     }, callDuration);
 
     callLog.push({
@@ -60,19 +65,21 @@ app.post('/cagriYap', (req, res) => {
     });
 
     res.send(`Çağrı alındı Alıcı: ${selectedRecipient.name}. Çağrının süresi: ${callDuration / 1000} saniye.`);
-  } else {
+  }
+  else {
     waitingCalls.push({
       timestamp: new Date().toLocaleString(),
       callerId: callerId,
     });
 
-    res.send('Seçilen çağrı alıcı şu anda meşgul. Lütfen daha sonra tekrar deneyin.');
+    res.send('Çağrı alıcılar şu anda meşgul. Bekleme listesine alındınız.');
   }
 });
 
-// Server Başlatma
+
+// Sunucuyu Başlat
 app.listen(port, () => {
-  console.log(`Server http://localhost:${port} adresinde çalışmakta`);
+  console.log(`Sunucu http://localhost:${port} adresinde çalışmakta`);
 });
 
 // Rastgele 11 haneli id oluşturur
@@ -89,6 +96,7 @@ function generateRandomId() {
 }
 
 function connectCall(callerId) {
+
   // Tüm çağrı alıcıları meşgulse, çağrıyı bekleme listesine ekle ve çık
   if (callRecipients.every((recipient) => !recipient.available)) {
     waitingCalls.push({
@@ -98,7 +106,7 @@ function connectCall(callerId) {
     return;
   }
 
-  // Find the next available recipient using round-robin
+  // Round-robin ile bir sonraki uygun çağrı alıcıyı bul
   let recipient;
   for (let i = 0; i < callRecipients.length; i++) {
     const index = (lastRecipientIndex + i) % callRecipients.length;
@@ -108,18 +116,6 @@ function connectCall(callerId) {
       break;
     }
   }
-
-  // If no available recipients were found, add to waitingCalls
-  if (!recipient) {
-    waitingCalls.push({
-      timestamp: new Date().toLocaleString(),
-      callerId: callerId,
-    });
-    return;
-  }
-
-  // Continue with the rest of the connectCall function as before...
-  // (Same code as in the provided function)
 
   const callDuration = simulateCallDuration();
 
@@ -132,10 +128,12 @@ function connectCall(callerId) {
 
   setTimeout(() => {
     recipient.available = true;
-    // Beklemede çağrı var mı kontrol eder
+    // Beklemede çağrı var mı kontrol et
     if (waitingCalls.length > 0) {
-      const nextCall = waitingCalls.shift();
+      let nextCall = waitingCalls.shift();
       connectCall(nextCall.callerId);
     }
   }, callDuration);
+
 }
+
