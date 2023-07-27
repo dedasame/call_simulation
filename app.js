@@ -11,9 +11,11 @@ app.use(express.static('public'));
 
 // Çağrı Alıcılar
 let callRecipients = [
-  { callCount: 0, callDuration: 0, name: 'Çağrı Alıcı 1', available: true },
-  { callCount: 0, callDuration: 0, name: 'Çağrı Alıcı 2', available: true },
-  { callCount: 0, callDuration: 0, name: 'Çağrı Alıcı 3', available: true }
+  { callCount: 2, callDuration: 20, name: 'Çağrı Alıcı 1', available: true },
+  { callCount: 1, callDuration: 25, name: 'Çağrı Alıcı 2', available: true },
+  { callCount: 1, callDuration: 10, name: 'Çağrı Alıcı 3', available: true },
+  { callCount: 2, callDuration: 20, name: 'Çağrı Alıcı 4', available: true },
+  { callCount: 2, callDuration: 15, name: 'Çağrı Alıcı 5', available: true }
 ];
 
 // Çağrı geçmişi
@@ -36,41 +38,40 @@ app.get('/', (req, res) => {
 app.post('/cagriYap', (req, res) => {
   const callerId = generateRandomId();
 
-  callRecipients = callRecipients.sort((a, b) => a.callCount - b.callCount);
+  // En az yoğun çağrı alıcıyı bul
+  let leastUtilizedRecipient = callRecipients.reduce((prev, curr) => {
+    const prevUtilization = prev.callCount * prev.callDuration;
+    const currUtilization = curr.callCount * curr.callDuration;
+    return prevUtilization <= currUtilization ? prev : curr;
+  });
 
-  //ilk boştaki çağrı alıcıyı seç
-  let availableRecipient = callRecipients.find((recipient) => recipient.available);
-
-  // Boşta çağrı alıcı var ise
-  if (availableRecipient) {
-
-    availableRecipient.available = false;
-    availableRecipient.callCount++;
+  // En az yoğun çağrı alıcıya yönlendir
+  if (leastUtilizedRecipient.available) {
+    leastUtilizedRecipient.available = false;
+    leastUtilizedRecipient.callCount++;
 
     const callDuration = simulateCallDuration();
+    leastUtilizedRecipient.callDuration += callDuration;
 
     callLog.push({
-      recipient: availableRecipient.name,
+      recipient: leastUtilizedRecipient.name,
       duration: callDuration / 1000,
       timestamp: new Date().toLocaleString(),
       callerId: callerId,
     });
 
     setTimeout(() => {
-      availableRecipient.available = true;
-
-      // Bekleyen çağrıyı kontrol et varsa bağla
+      leastUtilizedRecipient.available = true;
+      // Beklemede çağrı var mı kontrol eder
       if (waitingCalls.length > 0) {
         const nextCall = waitingCalls.shift();
         connectCall(nextCall.callerId);
       }
     }, callDuration);
 
-    res.send(`Çağrı alındı Alıcı: ${availableRecipient.name}. Çağrının süresi: ${callDuration / 1000} saniye.`);
-  }
-  // Boşta çağrı alıcı yok ise
-  else {
-    // Bekleme listesine ekler
+    res.send(`Çağrı alındı Alıcı: ${leastUtilizedRecipient.name}. Çağrının süresi: ${callDuration / 1000} saniye.`);
+  } else {
+    // En az yoğun çağrı alıcı meşgul ise, beklemeye alın
     waitingCalls.push({
       timestamp: new Date().toLocaleString(),
       callerId: callerId,
@@ -110,26 +111,27 @@ function connectCall(callerId) {
     return;
   }
 
-  // Çağrı alıcıları, çağrı sayılarına göre küçükten büyüğe sırala
-  callRecipients = callRecipients.sort((a, b) => a.callCount - b.callCount);
+  // En az yoğun çağrı alıcıyı bul
+  let leastUtilizedRecipient = callRecipients.reduce((prev, curr) => {
+    const prevUtilization = prev.callCount * prev.callDuration;
+    const currUtilization = curr.callCount * curr.callDuration;
+    return prevUtilization <= currUtilization ? prev : curr;
+  });
 
-  //ilk boştaki çağrı alıcıyı seç
-  let recipient = callRecipients.find((recipient) => recipient.available);
-
-  recipient.available = false;
-  recipient.callCount++; //Çağrı sayısını arttır
-
+  leastUtilizedRecipient.available = false;
+  leastUtilizedRecipient.callCount++;
   const callDuration = simulateCallDuration();
+  leastUtilizedRecipient.callDuration += callDuration;
 
   callLog.push({
-    recipient: recipient.name,
+    recipient: leastUtilizedRecipient.name,
     duration: callDuration / 1000,
     timestamp: new Date().toLocaleString(),
     callerId: callerId,
   });
 
   setTimeout(() => {
-    recipient.available = true;
+    leastUtilizedRecipient.available = true;
     // Beklemede çağrı var mı kontrol eder
     if (waitingCalls.length > 0) {
       const nextCall = waitingCalls.shift();
