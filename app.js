@@ -58,15 +58,13 @@ function connectCall(callerId) {
   }
 
   // Çağrı alıcıları, çağrı sayılarına göre küçükten büyüğe sırala
-  callRecipients = callRecipients.slice().sort((a, b) => a.callCount - b.callCount);
+  callRecipients = callRecipients.sort((a, b) => a.callCount - b.callCount);
 
   //ilk boştaki çağrı alıcıyı seç
   let recipient = callRecipients.find((recipient) => recipient.available);
 
   recipient.available = false;
   recipient.callCount++; //Çağrı sayısını arttır
-
-  callRecipients = callRecipients.slice().sort((a, b) => a.callCount - b.callCount);
 
   const callDuration = simulateCallDuration();
 
@@ -91,7 +89,7 @@ function connectCall(callerId) {
 app.post('/cagriYap', (req, res) => {
   const callerId = generateRandomId();
 
-  callRecipients = callRecipients.slice().sort((a, b) => a.callCount - b.callCount);
+  callRecipients = callRecipients.sort((a, b) => a.callCount - b.callCount);
 
   //ilk boştaki çağrı alıcıyı seç
   let availableRecipient = callRecipients.find((recipient) => recipient.available);
