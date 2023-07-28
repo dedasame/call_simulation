@@ -9,7 +9,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Çağrı Alıcılar -> 3-2-5-1-4
+// Çağrı Alıcılar -> 3-2-5-1-4 
 let callRecipients = [
   { callCount: 2, callDuration: 20, name: 'Çağrı Alıcı 1', available: true },
   { callCount: 1, callDuration: 25, name: 'Çağrı Alıcı 2', available: true },
