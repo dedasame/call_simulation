@@ -34,6 +34,47 @@ app.get('/', (req, res) => {
   res.render('index', { callRecipients, callLog, waitingCalls });
 });
 
+// Çağrıyı arama işlemini gerçekleştiren fonksiyon
+function connectCall(callerId) {
+  // Tüm çağrı alıcıları meşgulse, çağrıyı bekleme listesine ekle ve çık
+  if (callRecipients.every((recipient) => !recipient.available)) {
+    waitingCalls.push({
+      timestamp: new Date().toLocaleString(),
+      callerId: callerId,
+    });
+    return;
+  }
+
+  // En az yoğun çağrı alıcıyı bul
+  let leastUtilizedRecipient = callRecipients.reduce((prev, curr) => {
+    const prevUtilization = prev.callCount * prev.callDuration;
+    const currUtilization = curr.callCount * curr.callDuration;
+    return prevUtilization <= currUtilization ? prev : curr;
+  });
+
+  leastUtilizedRecipient.available = false;
+  leastUtilizedRecipient.callCount++;
+  const callDuration = simulateCallDuration();
+  leastUtilizedRecipient.callDuration += callDuration;
+
+  callLog.push({
+    recipient: leastUtilizedRecipient.name,
+    duration: callDuration / 1000,
+    timestamp: new Date().toLocaleString(),
+    callerId: callerId,
+  });
+
+  setTimeout(() => {
+    leastUtilizedRecipient.available = true;
+    // Beklemede çağrı var mı kontrol eder
+    if (waitingCalls.length > 0) {
+      const nextCall = waitingCalls.shift();
+      connectCall(nextCall.callerId);
+    }
+  }, callDuration);
+}
+
+
 // http://localhost:3000/cagri 'da olacak şeyler
 app.post('/cagriYap', (req, res) => {
   const callerId = generateRandomId();
@@ -100,42 +141,3 @@ function generateRandomId() {
   return id;
 }
 
-// Çağrıyı arama işlemini gerçekleştiren fonksiyon
-function connectCall(callerId) {
-  // Tüm çağrı alıcıları meşgulse, çağrıyı bekleme listesine ekle ve çık
-  if (callRecipients.every((recipient) => !recipient.available)) {
-    waitingCalls.push({
-      timestamp: new Date().toLocaleString(),
-      callerId: callerId,
-    });
-    return;
-  }
-
-  // En az yoğun çağrı alıcıyı bul
-  let leastUtilizedRecipient = callRecipients.reduce((prev, curr) => {
-    const prevUtilization = prev.callCount * prev.callDuration;
-    const currUtilization = curr.callCount * curr.callDuration;
-    return prevUtilization <= currUtilization ? prev : curr;
-  });
-
-  leastUtilizedRecipient.available = false;
-  leastUtilizedRecipient.callCount++;
-  const callDuration = simulateCallDuration();
-  leastUtilizedRecipient.callDuration += callDuration;
-
-  callLog.push({
-    recipient: leastUtilizedRecipient.name,
-    duration: callDuration / 1000,
-    timestamp: new Date().toLocaleString(),
-    callerId: callerId,
-  });
-
-  setTimeout(() => {
-    leastUtilizedRecipient.available = true;
-    // Beklemede çağrı var mı kontrol eder
-    if (waitingCalls.length > 0) {
-      const nextCall = waitingCalls.shift();
-      connectCall(nextCall.callerId);
-    }
-  }, callDuration);
-}
