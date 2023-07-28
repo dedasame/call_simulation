@@ -9,7 +9,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Çağrı Alıcılar
+// Çağrı Alıcılar -> 3-2-5-1-4
 let callRecipients = [
   { callCount: 2, callDuration: 20, name: 'Çağrı Alıcı 1', available: true },
   { callCount: 1, callDuration: 25, name: 'Çağrı Alıcı 2', available: true },
@@ -33,6 +33,20 @@ const simulateCallDuration = () => {
 app.get('/', (req, res) => {
   res.render('index', { callRecipients, callLog, waitingCalls });
 });
+
+//*rastgele 11 haneli id oluşturur
+function generateRandomId() {
+  const length = 11;
+  let id = '';
+  const characters = '0123456789';
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    id += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return id;
+}
+
 
 // Çağrıyı arama işlemini gerçekleştiren fonksiyon
 function connectCall(callerId) {
@@ -128,16 +142,4 @@ app.listen(port, () => {
 });
 
 
-//*rastgele 11 haneli id oluşturur
-function generateRandomId() {
-  const length = 11;
-  let id = '';
-  const characters = '0123456789';
-  const charactersLength = characters.length;
-
-  for (let i = 0; i < length; i++) {
-    id += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return id;
-}
 
